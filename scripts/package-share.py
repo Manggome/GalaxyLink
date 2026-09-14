@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess, shutil, json, re, plistlib
 
 ROOT = Path(__file__).resolve().parent.parent
-STAGE = ROOT / '.build' / 'share-1.7'
+STAGE = ROOT / '.build' / 'share-1.7.1'
 APP = STAGE / 'FoldLink.app'
 def run(*args):
     return subprocess.check_output([str(a) for a in args], text=True)
@@ -91,7 +91,7 @@ run('codesign','--force','--sign','-',APP)
 run('codesign','--verify','--deep','--strict',APP)
 link = STAGE / 'Applications'
 if not link.exists(): link.symlink_to('/Applications')
-readme = f'''Galaxy Link 1.7 — 팀 공유용
+readme = f'''Galaxy Link 1.7.1 — 팀 공유용
 
 지원: Apple Silicon (M1/M2/M3/M4 등), macOS {info['LSMinimumSystemVersion']} 이상
 

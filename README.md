@@ -117,7 +117,7 @@ USB 디버깅을 허용한 뒤 **유선 연결 → 파일 전송 → 파일 열�
 
 ```sh
 python3 scripts/package-share.py
-hdiutil create -volname "Galaxy Link" -srcfolder .build/share-1.7 -ov -format UDZO dist/GalaxyLink-1.7-AppleSilicon.dmg
+hdiutil create -volname "Galaxy Link" -srcfolder .build/share-1.7.1 -ov -format UDZO dist/GalaxyLink-1.7.1-AppleSilicon.dmg
 ```
 
 `.build/`와 `dist/`는 Git에 포함하지 않습니다. Android 도우미 업데이트에 사용하는 개발 서명 키도 저장소에 올리지 않습니다.
