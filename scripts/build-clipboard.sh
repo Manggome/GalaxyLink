@@ -9,7 +9,8 @@ OUT="$PWD/.build/clipboard"
 mkdir -p "$OUT/classes" "$OUT/dex"
 javac --release 8 -classpath "$SDK/platforms/android-35/android.jar" -d "$OUT/classes" android-clipboard/src/local/foldlink/clipboard/*.java
 "$BT/d8" --lib "$SDK/platforms/android-35/android.jar" --output "$OUT/dex" "$OUT"/classes/local/foldlink/clipboard/*.class
-"$BT/aapt2" link -I "$SDK/platforms/android-35/android.jar" --manifest android-clipboard/AndroidManifest.xml -o "$OUT/unsigned.apk"
+"$BT/aapt2" compile --dir android-clipboard/res -o "$OUT/resources.zip"
+"$BT/aapt2" link -I "$SDK/platforms/android-35/android.jar" --manifest android-clipboard/AndroidManifest.xml -o "$OUT/unsigned.apk" "$OUT/resources.zip"
 (cd "$OUT/dex" && zip -q -u ../unsigned.apk classes.dex)
 "$BT/zipalign" -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 if [[ ! -f "$OUT/development.keystore" ]]; then

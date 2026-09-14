@@ -68,8 +68,8 @@ int main(void) {
     const struct sc_text_event korean = {.text = "한글 입력 테스트 😀"};
     sdk.key_processor.ops->process_text(&sdk.key_processor, &korean);
     struct sc_control_msg *unicode = sc_vecdeque_popref(&controller.queue);
-    assert(unicode->type == SC_CONTROL_MSG_TYPE_SET_CLIPBOARD && unicode->set_clipboard.paste);
-    assert(!strcmp(unicode->set_clipboard.text, korean.text));
+    assert(unicode->type == SC_CONTROL_MSG_TYPE_INJECT_TEXT);
+    assert(!strcmp(unicode->inject_text.text, korean.text));
     sc_control_msg_destroy(unicode);
     sc_controller_destroy(&controller);
     SDL_Quit();

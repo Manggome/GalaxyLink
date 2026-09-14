@@ -321,19 +321,8 @@ sc_key_processor_process_text(struct sc_key_processor *kp,
         LOGW("Could not strdup input text");
         return;
     }
-    // Android KeyCharacterMap cannot synthesize Hangul or emoji. Commit those
-    // Unicode strings through scrcpy's existing clipboard-and-paste protocol.
-    bool unicode = false;
-    for (const unsigned char *p = (const unsigned char *)event->text; *p; ++p) {
-        if (*p >= 0x80) { unicode = true; break; }
-    }
-    if (unicode) {
-        char *text = msg.inject_text.text;
-        msg.type = SC_CONTROL_MSG_TYPE_SET_CLIPBOARD;
-        msg.set_clipboard.sequence = SC_SEQUENCE_INVALID;
-        msg.set_clipboard.text = text;
-        msg.set_clipboard.paste = true;
-    }
+    // The bundled server routes Unicode to the Galaxy Link IME. Typing must
+    // never mutate the clipboard or issue a paste command for each syllable.
     if (!sc_controller_push_msg(kb->controller, &msg)) {
         sc_control_msg_destroy(&msg);
         LOGW("Could not request 'inject text'");

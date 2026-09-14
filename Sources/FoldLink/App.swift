@@ -106,7 +106,12 @@ struct ContentView: View {
                         }
                         Toggle("맥에서 휴대폰 소리 재생", isOn: $model.audio)
                         Toggle("맥 입력기 사용 · 한글 조합 입력 (권장)", isOn: $model.keyboard)
-                        Text("Caps Lock → 맥 한·영 전환 · 휴대폰 입력 언어와 무관\n폴더블 기기는 접기·펼치기 애니메이션 자동 적용")
+                        if model.keyboard {
+                            Button(model.keyboardSetupBusy ? "입력기 준비 중…" : "한글 입력기 설치·설정") { Task { await model.prepareKeyboard() } }
+                                .disabled(model.keyboardSetupBusy || model.selected.isEmpty)
+                            Text(model.keyboardStatus).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Text("Caps Lock → 맥 한·영 전환 · 한글은 입력기로 직접 전달\n폴더블 기기는 접기·펼치기 애니메이션 자동 적용")
                             .font(.caption).foregroundStyle(.secondary)
                         Text(model.clipboardStatus).font(.caption).foregroundStyle(.secondary)
                         Text("이미지 첫 붙여넣기 시 휴대폰에 FoldLink 이미지 도우미를 설치합니다.").font(.caption2).foregroundStyle(.secondary)

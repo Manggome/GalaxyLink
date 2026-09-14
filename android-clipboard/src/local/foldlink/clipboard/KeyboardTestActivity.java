@@ -12,9 +12,14 @@ import android.text.Editable;
 /** Local, non-persistent diagnostic editor. Never sends text anywhere. */
 public final class KeyboardTestActivity extends Activity {
     public static volatile String currentText = "";
+    public static volatile int clipboardChanges;
+    private android.content.ClipboardManager clipboard;
+    private final android.content.ClipboardManager.OnPrimaryClipChangedListener listener = () -> clipboardChanges++;
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        currentText = "";
+        currentText = ""; clipboardChanges = 0;
+        clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        clipboard.addPrimaryClipChangedListener(listener);
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(1); layout.setPadding(32, 40, 32, 32);
         TextView title = new TextView(this);
@@ -32,5 +37,5 @@ public final class KeyboardTestActivity extends Activity {
         editor.requestFocus();
         editor.postDelayed(() -> ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(editor, InputMethodManager.SHOW_IMPLICIT), 250);
     }
-    public void onDestroy() { currentText = ""; super.onDestroy(); }
+    public void onDestroy() { clipboard.removePrimaryClipChangedListener(listener); currentText = ""; super.onDestroy(); }
 }

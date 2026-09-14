@@ -25,3 +25,7 @@ Version 1.4 typing corrections (supersedes the earlier default Caps Lock relay):
 - Move scrcpy control shortcuts to right Option to separate them from normal Mac typing.
 - Keep a HID scancode even if its logical keycode is unknown for the optional UHID mode.
 - Add a non-persistent, shell-protected diagnostic editor to the Android companion.
+
+## 1.8 direct IME typing
+
+Removed Unicode per-syllable clipboard paste in keyboard_sdk.c. Bundled server sends committed text to the shell-restricted helper provider and its InputConnection, caching the provider client per controller. Explicit clipboard shortcuts remain unchanged. Manual server build now quotes paths and uses an absolute source directory. Build and package the custom server together with the custom client.

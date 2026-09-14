@@ -8,6 +8,24 @@ import android.provider.OpenableColumns;
 import java.io.*;
 
 public final class ImageProvider extends ContentProvider {
+    @Override public android.os.Bundle call(String method, String arg, android.os.Bundle extras) {
+        // ContentProvider.call needs its own permission check, including callers
+        // holding a temporary image URI grant. Never accept ordinary app callers.
+        int uid = android.os.Binder.getCallingUid();
+        if (uid != 2000 && uid != 0) throw new SecurityException("ADB shell only");
+        android.os.Bundle result = new android.os.Bundle();
+        if ("commitText".equals(method)) result.putBoolean("accepted", LinkInputMethod.commit(arg));
+        else if ("key".equals(method) && extras != null) {
+            int action = extras.getInt("action", -1);
+            int keycode = extras.getInt("keycode", -1);
+            if ((action != 0 && action != 1) || keycode < 0 || keycode > android.view.KeyEvent.getMaxKeyCode())
+                throw new IllegalArgumentException("Invalid key");
+            long now = android.os.SystemClock.uptimeMillis();
+            result.putBoolean("accepted", LinkInputMethod.key(new android.view.KeyEvent(now, now, action,
+                    keycode, Math.max(0, extras.getInt("repeat")), extras.getInt("meta"))));
+        } else throw new IllegalArgumentException("Unknown method");
+        return result;
+    }
     static String id(Uri uri) {
         String value = uri.getLastPathSegment();
         if (value == null || !value.matches("[A-Fa-f0-9-]{36}")) throw new IllegalArgumentException("Invalid image id");
@@ -32,8 +50,8 @@ public final class ImageProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] args, String sort) {
         String id = id(uri);
         if ("typing".equals(uri.getPathSegments().get(0))) {
-            MatrixCursor cursor = new MatrixCursor(new String[]{"text"});
-            cursor.addRow(new Object[]{KeyboardTestActivity.currentText});
+            MatrixCursor cursor = new MatrixCursor(new String[]{"text", "clipboardChanges"});
+            cursor.addRow(new Object[]{KeyboardTestActivity.currentText, KeyboardTestActivity.clipboardChanges});
             return cursor;
         }
         if ("status".equals(uri.getPathSegments().get(0))) {

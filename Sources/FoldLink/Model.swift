@@ -12,6 +12,8 @@ import SwiftUI
     @Published var quality = 1920
     @Published var audio = true
     @Published var keyboard = true
+    @Published var keyboardSetupBusy = false
+    @Published var keyboardStatus = "한글 입력은 휴대폰에서 Galaxy Link 입력기를 선택하세요."
     @Published var top = false
     @Published var wirelessBusy = false
     @Published var wirelessStatus = "같은 Wi-Fi에 연결하고 휴대폰의 무선 디버깅을 켜세요."
@@ -23,7 +25,7 @@ import SwiftUI
     private var process: Process?
     private var reader: Task<Void, Never>?
     var available: Bool { Engine.path("scrcpy") != nil && Engine.path("adb") != nil }
-    var canStart: Bool { available && !running && !wirelessBusy && devices.contains { $0.id == selected && $0.ready } }
+    var canStart: Bool { available && !running && !wirelessBusy && !keyboardSetupBusy && devices.contains { $0.id == selected && $0.ready } }
 
     func pair(address: String, code: String) async {
         guard !wirelessBusy, !running, let adb = Engine.path("adb"),
@@ -74,7 +76,39 @@ import SwiftUI
         if !devices.contains(where: { $0.id == selected }) { selected = devices.first(where: \.ready)?.id ?? devices.first?.id ?? "" }
         if !running { status = devices.first(where: { $0.id == selected })?.status ?? "USB 또는 Wi-Fi로 갤럭시를 연결하세요" }
     }
+    func prepareKeyboard() async {
+        guard !running, !keyboardSetupBusy, let adb = Engine.path("adb"),
+              devices.contains(where: { $0.id == selected && $0.ready }),
+              let apk = Bundle.main.url(forResource: "FoldLinkClipboard", withExtension: "apk") else { return }
+        keyboardSetupBusy = true; defer { keyboardSetupBusy = false }
+        let serial = selected
+        keyboardStatus = "Galaxy Link 입력기 설치 중…"
+        let (code, output) = await Engine.run(adb, ["-s", serial, "install", "--no-incremental", "-r", apk.path], timeoutSeconds: 60)
+        guard code == 0 && output.contains("Success") else { keyboardStatus = "입력기 설치 실패 · 휴대폰 설치 허용 상태를 확인하세요."; return }
+        _ = await Engine.run(adb, ["-s", serial, "shell", "am", "start", "-a", "android.settings.INPUT_METHOD_SETTINGS"])
+        keyboardStatus = "휴대폰에서 Galaxy Link 입력기를 켜고 기본 키보드로 선택한 뒤 화면을 연결하세요. 입력기 하단에서 다른 키보드로 돌아갈 수 있습니다."
+    }
     func start() {
+        guard canStart else { return }
+        let serial = selected
+        keyboardSetupBusy = true
+        Task {
+            defer { keyboardSetupBusy = false }
+            if keyboard, let adb = Engine.path("adb") {
+                keyboardSetupBusy = true
+                let (_, current) = await Engine.run(adb, ["-s", serial, "shell", "settings", "get", "secure", "default_input_method"])
+                keyboardSetupBusy = false
+                guard current.contains("local.foldlink.clipboard/") && current.contains("LinkInputMethod") else {
+                    keyboardStatus = "한글 입력기 설치·설정을 누른 뒤 휴대폰에서 Galaxy Link 입력기를 선택하세요."
+                    status = "한글 입력기 설정이 필요합니다"; return
+                }
+            }
+            guard selected == serial else { return }
+            keyboardSetupBusy = false
+            launchMirror()
+        }
+    }
+    private func launchMirror() {
         guard canStart, let executable = Engine.path("scrcpy") else { return }
         let p = Process(), pipe = Pipe()
         p.executableURL = URL(fileURLWithPath: executable)
@@ -136,6 +170,9 @@ import SwiftUI
                 append(clipboardStatus)
             }
             return
+        }
+        if line.contains("Galaxy Link input unavailable") {
+            keyboardStatus = "휴대폰에서 Galaxy Link 입력기를 선택하고 입력란을 클릭하세요."
         }
         append(line)
         if let size = FrameSize.parse(line) {

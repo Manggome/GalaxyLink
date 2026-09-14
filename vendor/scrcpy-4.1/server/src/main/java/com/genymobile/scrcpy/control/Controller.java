@@ -80,6 +80,7 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private ExecutorService startAppExecutor;
 
+    private android.content.ContentProviderClient typingClient;
     private Thread thread;
     private Thread keepActiveThread;
 
@@ -312,6 +313,7 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
     public void join() throws InterruptedException {
         if (thread != null) {
             thread.join();
+            if (typingClient != null) { typingClient.close(); typingClient = null; }
         }
         if (sender != null) {
             sender.join();
@@ -440,7 +442,23 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
         throw new AssertionError("Unexpected message type: " + type);
     }
 
+    private boolean callTyping(String method, String text, android.os.Bundle extras) {
+        try {
+            if (typingClient == null) typingClient = com.genymobile.scrcpy.FakeContext.get().getContentResolver()
+                    .acquireContentProviderClient(android.net.Uri.parse("content://local.foldlink.clipboard"));
+            android.os.Bundle result = typingClient == null ? null : typingClient.call(method, text, extras);
+            return result != null && result.getBoolean("accepted");
+        } catch (Exception e) {
+            if (typingClient != null) { typingClient.close(); typingClient = null; }
+            return false;
+        }
+    }
+
     private boolean injectKeycode(int action, int keycode, int repeat, int metaState) {
+        android.os.Bundle extras = new android.os.Bundle();
+        extras.putInt("action", action); extras.putInt("keycode", keycode);
+        extras.putInt("repeat", repeat); extras.putInt("meta", metaState);
+        if (callTyping("key", null, extras)) return true;
         if (keepDisplayPowerOff && action == KeyEvent.ACTION_UP && (keycode == KeyEvent.KEYCODE_POWER || keycode == KeyEvent.KEYCODE_WAKEUP)) {
             assert displayId != Device.DISPLAY_ID_NONE;
             scheduleDisplayPowerOff(displayId);
@@ -468,6 +486,20 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
     }
 
     private int injectText(String text) {
+        boolean unicode = false;
+        for (int i = 0; i < text.length(); ++i) {
+            if (text.charAt(i) >= 0x80) { unicode = true; break; }
+        }
+        {
+            // All committed typing uses one InputConnection to preserve mixed-script order.
+            try {
+                if (callTyping("commitText", text, null)) return text.length();
+            } catch (RuntimeException e) { /* No typed content in logs. */ }
+            if (unicode) {
+                Ln.w("Galaxy Link input unavailable: select Galaxy Link IME and focus an editable field");
+                return 0; // Do not silently return to per-syllable clipboard paste.
+            }
+        }
         int successCount = 0;
         for (char c : text.toCharArray()) {
             if (!injectChar(c)) {
