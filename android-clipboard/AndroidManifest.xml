@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="local.foldlink.clipboard" android:versionCode="2" android:versionName="1.1">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35" />
+    <application android:label="FoldLink 이미지 도우미" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <provider android:name=".ImageProvider" android:authorities="local.foldlink.clipboard" android:exported="true" android:permission="android.permission.DUMP" android:grantUriPermissions="true" />
+        <activity android:name=".PasteActivity" android:exported="true" android:permission="android.permission.DUMP" android:excludeFromRecents="true" />
+        <activity android:name=".KeyboardTestActivity" android:exported="true" android:permission="android.permission.DUMP" android:excludeFromRecents="true" android:windowSoftInputMode="stateAlwaysVisible|adjustResize" />
+    </application>
+</manifest>

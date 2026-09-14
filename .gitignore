@@ -1,0 +1,14 @@
+.build/
+dist/
+.DS_Store
+
+# Local credentials and generated files
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+.swiftpm/
+*.xcuserstate
