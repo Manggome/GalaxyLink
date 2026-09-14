@@ -29,8 +29,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleDisplayName</key><string>Galaxy Link</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>1.8.0</string>
-<key>CFBundleVersion</key><string>10</string>
+<key>CFBundleShortVersionString</key><string>1.8.1</string>
+<key>CFBundleVersion</key><string>11</string>
 <key>NSLocalNetworkUsageDescription</key><string>같은 Wi-Fi의 갤럭시에 연결해 휴대폰 화면을 표시합니다.</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>

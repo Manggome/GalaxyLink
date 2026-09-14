@@ -4,8 +4,8 @@ from pathlib import Path
 import subprocess, shutil, json, re, plistlib
 
 ROOT = Path(__file__).resolve().parent.parent
-STAGE = ROOT / '.build' / 'share-1.8'
-APP = STAGE / 'FoldLink.app'
+STAGE = ROOT / '.build' / 'share-1.8.1'
+APP = STAGE / 'Galaxy Link.app'
 def run(*args):
     return subprocess.check_output([str(a) for a in args], text=True)
 STAGE.mkdir(parents=True, exist_ok=True)
@@ -20,7 +20,7 @@ licenses.mkdir(exist_ok=True)
 sources = APP / 'Contents/Resources/Sources'
 if sources.exists(): shutil.rmtree(sources)
 sources.mkdir()
-for name in ['Sources', 'android-clipboard', 'scripts', 'vendor']:
+for name in ['Sources', 'android-clipboard', 'scripts', 'vendor', 'docs']:
     shutil.copytree(ROOT / name, sources / name)
 shutil.copy2(ROOT / 'Package.swift', sources / 'Package.swift')
 shutil.copy2(ROOT / 'README.md', sources / 'README.md')
@@ -91,11 +91,11 @@ run('codesign','--force','--sign','-',APP)
 run('codesign','--verify','--deep','--strict',APP)
 link = STAGE / 'Applications'
 if not link.exists(): link.symlink_to('/Applications')
-readme = f'''Galaxy Link 1.8 — 팀 공유용
+readme = f'''Galaxy Link 1.8.1 — 팀 공유용
 
 지원: Apple Silicon (M1/M2/M3/M4 등), macOS {info['LSMinimumSystemVersion']} 이상
 
-1. FoldLink.app을 Applications 폴더로 드래그합니다.
+1. Galaxy Link.app을 Applications 폴더로 드래그합니다.
 2. 응용 프로그램에서 FoldLink를 실행합니다.
 3. 휴대폰에서 개발자 옵션의 USB 디버깅 또는 무선 디버깅을 켜고 연결합니다.
 

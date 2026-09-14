@@ -26,7 +26,7 @@ bash scripts/build.sh
 
 ```sh
 python3 scripts/package-share.py
-hdiutil create -volname "Galaxy Link" -srcfolder .build/share-1.8 -ov -format UDZO dist/GalaxyLink-1.8-AppleSilicon.dmg
+hdiutil create -volname "Galaxy Link" -srcfolder .build/share-1.8.1 -ov -format UDZO dist/GalaxyLink-1.8.1-AppleSilicon.dmg
 ```
 
 패키징 스크립트는 ADB와 필요한 라이브러리, 도우미, 엔진 소스와 라이선스를 묶습니다. 현재 배포 대상은 Apple Silicon · macOS 26 이상입니다. 로컬 서명을 사용하며 Developer ID 서명이나 공증은 하지 않습니다.
